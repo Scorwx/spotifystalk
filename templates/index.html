@@ -112,6 +112,11 @@
         </main>
     </div>
     <script>
+        let originalTitle = document.title;
+        let newSongCount = 0;
+        let isTabActive = true;
+        let previousSongsLength = 0;
+
         async function fetchSongData() {
             const response = await fetch('/songs');
             const data = await response.json();
@@ -172,12 +177,34 @@
 
         async function init() {
             const songs = await fetchSongData();
+            previousSongsLength = songs.length; // Track the initial song count
             displaySongs(songs);
+
             setInterval(async () => {
                 const updatedSongs = await fetchSongData();
+                const newSongsCount = updatedSongs.length - previousSongsLength;
+
+                // If new songs are found and the tab is not active, update the tab title
+                if (newSongsCount > 0 && !isTabActive) {
+                    newSongCount += newSongsCount;
+                    document.title = `${newSongCount} yeni şarkı dinlendi`;
+                }
+                
+                previousSongsLength = updatedSongs.length; // Update the previous song count
                 displaySongs(updatedSongs);
             }, 1000);
         }
+
+        // Listen for tab visibility changes
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                isTabActive = false;
+            } else {
+                isTabActive = true;
+                document.title = originalTitle;  // Reset the title when the tab is active again
+                newSongCount = 0;  // Reset new song count
+            }
+        });
 
         init();
     </script>
